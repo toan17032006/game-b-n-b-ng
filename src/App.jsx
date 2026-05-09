@@ -86,7 +86,7 @@ function App() {
   })
 
   const gameRef = useRef({
-    paddle: { x: CANVAS_WIDTH / 2 - PADDLE_WIDTH / 2, width: PADDLE_WIDTH },
+    paddle: { x: CANVAS_WIDTH / 2 - PADDLE_WIDTH / 2, width: PADDLE_WIDTH, y: CANVAS_HEIGHT - PADDLE_HEIGHT - 5 },
     balls: [],
     bricks: [],
     powerUps: [],
@@ -148,7 +148,7 @@ function App() {
     const { paddle } = gameRef.current
     gameRef.current.bullets.push({
       x: paddle.x + paddle.width / 2,
-      y: CANVAS_HEIGHT - PADDLE_HEIGHT - 10,
+      y: paddle.y - 10,
       dy: -8,
       width: 4,
       height: 10
@@ -211,8 +211,8 @@ function App() {
         if (ball.y - BALL_RADIUS < 0) ball.dy *= -1
 
         // Paddle collision
-        if (ball.y + BALL_RADIUS > CANVAS_HEIGHT - PADDLE_HEIGHT - 5 &&
-            ball.y - BALL_RADIUS < CANVAS_HEIGHT - 5 &&
+        if (ball.y + BALL_RADIUS > paddle.y &&
+            ball.y - BALL_RADIUS < paddle.y + PADDLE_HEIGHT &&
             ball.x > paddle.x && ball.x < paddle.x + paddle.width) {
           ball.dy = -Math.abs(ball.dy)
           const hitPos = (ball.x - paddle.x) / paddle.width
@@ -245,8 +245,8 @@ function App() {
           powerUps.splice(index, 1)
           return
         }
-        if (pu.y + pu.height > CANVAS_HEIGHT - PADDLE_HEIGHT - 5 &&
-            pu.y - pu.height < CANVAS_HEIGHT - 5 &&
+        if (pu.y + pu.height > paddle.y &&
+            pu.y - pu.height < paddle.y + PADDLE_HEIGHT &&
             pu.x + pu.width > paddle.x && pu.x < paddle.x + paddle.width) {
           if (pu.type === 'multiball') {
             const newBalls = []
@@ -303,8 +303,8 @@ function App() {
             }
           } else {
             gameRef.current.balls = [{
-              x: CANVAS_WIDTH / 2,
-              y: CANVAS_HEIGHT - 50,
+              x: gameRef.current.paddle.x + gameRef.current.paddle.width / 2,
+              y: gameRef.current.paddle.y - BALL_RADIUS,
               dx: 4 * (Math.random() > 0.5 ? 1 : -1),
               dy: -4,
               active: true
@@ -339,7 +339,7 @@ function App() {
 
       // Draw paddle
       ctx.fillStyle = '#00ff88'
-      ctx.fillRect(paddle.x, CANVAS_HEIGHT - PADDLE_HEIGHT - 5, paddle.width, PADDLE_HEIGHT)
+      ctx.fillRect(paddle.x, paddle.y, paddle.width, PADDLE_HEIGHT)
 
       // Draw balls
       balls.forEach(ball => {
@@ -385,9 +385,24 @@ function App() {
       ctx.fillStyle = '#ffffff'
       ctx.font = '20px Arial'
       ctx.fillText(`Score: ${score}`, 10, 30)
-      ctx.fillText(`Lives: ${lives}`, CANVAS_WIDTH - 120, 30)
-      ctx.fillText(`Level: ${level}`, CANVAS_WIDTH / 2 - 40, 30)
-      ctx.fillText(`High Score: ${highScore}`, CANVAS_WIDTH / 2 - 80, CANVAS_HEIGHT - 10)
+      ctx.fillText(`High Score: ${highScore}`, 10, 60)
+
+      // Draw lives as hearts
+      const heartX = CANVAS_WIDTH - 30;
+      const heartY = 30;
+      for (let i = 0; i < 3; i++) {
+        if (i < lives) {
+          ctx.fillStyle = '#ff0000';
+          ctx.font = '20px Arial';
+          ctx.fillText('❤️', heartX - i * 30, heartY);
+        } else {
+          ctx.fillStyle = '#555';
+          ctx.font = '20px Arial';
+          ctx.fillText('🖤', heartX - i * 30, heartY);
+        }
+      }
+
+      ctx.fillText(`Level: ${level}`, CANVAS_WIDTH / 2 - 40, 30);
 
       // Draw messages
       if (gameState === 'waiting') {
@@ -413,6 +428,7 @@ function App() {
         ctx.fillStyle = '#ffffff'
         ctx.font = '20px Arial'
         ctx.fillText(`Final Score: ${score}`, CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2 + 20)
+        ctx.fillText(`High Score: ${highScore}`, CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2 + 40)
         ctx.fillText('Press SPACE to Restart', CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2 + 60)
         ctx.textAlign = 'left'
       }
