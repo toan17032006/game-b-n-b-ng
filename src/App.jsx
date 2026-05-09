@@ -74,6 +74,24 @@ const LEVELS = [
 
 const BRICK_COLORS = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7', '#DDA0DD']
 
+const playSound = (frequency, type = 'sine', duration = 0.1) => {
+  const audioCtx = new (window.AudioContext || window.webkitAudioContext)()
+  const oscillator = audioCtx.createOscillator()
+  const gainNode = audioCtx.createGain()
+
+  oscillator.type = type
+  oscillator.frequency.setValueAtTime(frequency, audioCtx.currentTime)
+
+  gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime)
+  gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration)
+
+  oscillator.connect(gainNode)
+  gainNode.connect(audioCtx.destination)
+
+  oscillator.start()
+  oscillator.stop(audioCtx.currentTime + duration)
+}
+
 function App() {
   const canvasRef = useRef(null)
   const [score, setScore] = useState(0)
@@ -229,6 +247,7 @@ function App() {
               ball.y > brick.y && ball.y < brick.y + brick.height) {
             ball.dy *= -1
             brick.hits--
+            playSound(440, 'sine', 0.1)
             if (brick.hits <= 0) {
               brick.active = false
               setScore(s => s + (brick.isSpecial ? 50 : 10))
@@ -281,6 +300,7 @@ function App() {
               bullet.y > brick.y && bullet.y < brick.y + brick.height) {
             bullets.splice(bIndex, 1)
             brick.hits--
+            playSound(660, 'square', 0.05)
             if (brick.hits <= 0) {
               brick.active = false
               setScore(s => s + (brick.isSpecial ? 50 : 10))
